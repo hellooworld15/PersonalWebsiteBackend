@@ -1,10 +1,10 @@
-import dotenv from 'dotenv';
+import * as dotenv from 'dotenv';
 dotenv.config();
-
+ 
 import express from "express";
-import bodyParser from "body-parser";
-import cors from "cors";
-import fetch from 'node-fetch';
+import * as bodyParser from "body-parser";
+import * as cors from "cors";
+import * as fetch from 'node-fetch';
 
 const app = express();
 const port = process.env.PORT || 3000;

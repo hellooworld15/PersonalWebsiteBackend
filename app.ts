@@ -1,11 +1,14 @@
-import { ESRCH } from "constants";
-import * as express from "express";
-import * as cors from "cors";
-import * as bodyParser from "body-parser";
+import dotenv from 'dotenv';
+dotenv.config();
 
+import express from "express";
+import bodyParser from "body-parser";
+import cors from "cors";
+import fetch from 'node-fetch';
 
 const app = express();
-const port = 3001;
+const port = process.env.PORT || 3000;
+const discordWebhookURL = process.env.DISCORD_WEBHOOK;
 
 app.use(cors());
 
@@ -16,10 +19,11 @@ app.get('/', (req, res) => {
     res.send('Hello World!');
 })
 
-app.post('/contact', (req, res) => {
+app.post('/contact', async (req, res) => {
     console.log(req.body);
     const { name, email, note } = req.body;
 
+    // Validation
     if (!name) {
         res.status(400);
         res.send("Missing name.");
@@ -34,6 +38,24 @@ app.post('/contact', (req, res) => {
         res.status(400);
         res.send("Missing note.");
         return;
+    }
+    
+    // Send to discord
+    let rawPayloadString = `-----\nname: ${name}\nemail: ${email}\nnote: ${note}\n-----`
+
+    const payloadStrings = [];
+
+    while (rawPayloadString.length > 0) {
+        payloadStrings.push(rawPayloadString.slice(0, 2000))
+        rawPayloadString = rawPayloadString.slice(2000)
+    }
+    
+    for (const payload of payloadStrings) {
+        await fetch(discordWebhookURL, {
+            method: "POST", 
+            headers: {'Content-Type': 'application/json'}, 
+            body: JSON.stringify({content: payload})
+        }).then(async (res) => {console.log(await res.text())});
     }
 
     res.send('Thank you for your message.');

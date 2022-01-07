@@ -1,9 +1,12 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
+
+import https from 'https';
+import fs from 'fs';
  
 import express from "express";
 import * as bodyParser from "body-parser";
-import * as cors from "cors";
+import cors from "cors";
 import * as fetch from 'node-fetch';
 
 const app = express();
@@ -61,8 +64,16 @@ app.post('/contact', async (req, res) => {
     res.send('Thank you for your message.');
 })
 
-app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`);
-})
+if (process.env.NODE_ENV === 'production') {
+    const privateKey  = fs.readFileSync(process.env.SSL_PRIVATE_KEY_PATH, 'utf8');
+    const certificate = fs.readFileSync(process.env.SSL_SERVER_CERT_PATH, 'utf8');
 
+    const credentials = {key: privateKey, cert: certificate};
+    const httpsServer = https.createServer(credentials, app);
 
+    httpsServer.listen(port);
+} else {
+    app.listen(port, () => {
+        console.log(`Example app listening at http://localhost:${port}`);
+    })
+}
